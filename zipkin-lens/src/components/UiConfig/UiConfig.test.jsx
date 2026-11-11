@@ -2,7 +2,7 @@
  * Copyright The OpenZipkin Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, it, describe, expect, vi } from 'vitest';
 import React, { Suspense } from 'react';
 
@@ -10,6 +10,7 @@ import { UI_CONFIG } from '../../constants/api';
 import { defaultConfig } from './constants';
 
 afterEach(() => {
+  cleanup();
   vi.restoreAllMocks();
   vi.resetModules();
 });
@@ -52,5 +53,49 @@ describe('<UiConfig />', () => {
 
     // Check that the expected JSON is rendered
     expect(screen.getByText(configJson)).not.toBeNull();
+  });
+
+  // See https://github.com/openzipkin/zipkin/issues/3508
+  it('does not override falsy values with defaults', async () => {
+    // searchEnabled=false and environment="" are valid configuration and must
+    // not be replaced by the defaults in defaultConfig.
+    const config = {
+      searchEnabled: false,
+      environment: '',
+    };
+    const configJson = JSON.stringify(config);
+
+    const fetchSpy = vi
+      .spyOn(global, 'fetch')
+      .mockImplementationOnce(async () => new Response(configJson));
+
+    await renderUiConfig();
+    await new Promise((res) => setTimeout(res, 10));
+
+    expect(fetchSpy).toHaveBeenCalledWith(UI_CONFIG);
+    const rendered = JSON.parse(screen.getByText(/\{/).textContent);
+    expect(rendered.searchEnabled).toBe(false);
+    expect(rendered.environment).toBe('');
+  });
+
+  it('defaults keys missing from the response', async () => {
+    const config = {
+      searchEnabled: false,
+    };
+    const configJson = JSON.stringify(config);
+
+    vi.spyOn(global, 'fetch')
+      .mockImplementationOnce(async () => new Response(configJson));
+
+    await renderUiConfig();
+    await new Promise((res) => setTimeout(res, 10));
+
+    const rendered = JSON.parse(screen.getByText(/\{/).textContent);
+    // Explicitly configured value is kept.
+    expect(rendered.searchEnabled).toBe(false);
+    // Keys not in the response are defaulted.
+    expect(rendered.queryLimit).toBe(defaultConfig.queryLimit);
+    expect(rendered.environment).toBe(defaultConfig.environment);
+    expect(rendered.dependency).toEqual(defaultConfig.dependency);
   });
 });

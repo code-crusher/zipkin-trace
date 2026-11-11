@@ -75,6 +75,13 @@ const Layout: React.FC = ({ children }) => {
             </Box>
             <ThemeProvider theme={darkTheme}>
               <Box display="flex" alignItems="center">
+                {config.environment && (
+                  <Box mr={2}>
+                    <EnvironmentLabel variant="caption">
+                      {config.environment}
+                    </EnvironmentLabel>
+                  </Box>
+                )}
                 <Box mr={2} ml={2}>
                   <TraceJsonUploader />
                 </Box>
@@ -130,6 +137,14 @@ const Title = styled(Typography).attrs({
 })`
   margin-left: ${({ theme }) => theme.spacing(2)}px;
   margin-right: ${({ theme }) => theme.spacing(2)}px;
+`;
+
+const EnvironmentLabel = styled(Typography).attrs({
+  variant: 'caption',
+})`
+  padding: 2px 6px;
+  border-radius: 10px;
+  background-color: ${({ theme }) => theme.palette.grey[700]};
 `;
 
 const ToolbarSpace = styled.div`

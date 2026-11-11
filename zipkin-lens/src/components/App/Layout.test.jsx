@@ -69,4 +69,31 @@ describe('<Layout />', () => {
     );
     expect(screen.queryByTitle('Dependencies')).toBeNull();
   });
+
+  it('does not render environment label with default config', () => {
+    // children is required so avoid warning by passing dummy children
+    render(
+      <Layout>
+        <span>Test</span>
+        <span>Test</span>
+      </Layout>,
+    );
+    expect(screen.queryByText('test')).toBeNull();
+  });
+
+  it('renders environment label when configured', () => {
+    // children is required so avoid warning by passing dummy children
+    render(
+      <Layout>
+        <span>Test</span>
+        <span>Test</span>
+      </Layout>,
+      {
+        uiConfig: {
+          environment: 'test',
+        },
+      },
+    );
+    expect(screen.getByText('test')).toBeDefined();
+  });
 });

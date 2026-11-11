@@ -32,6 +32,8 @@ import static zipkin2.server.internal.ITZipkinServer.url;
     "server.port=0",
     "spring.config.name=zipkin-server",
     "zipkin.ui.base-path=/admin/zipkin",
+    "zipkin.ui.environment=test",
+    "zipkin.ui.search-enabled=false",
     "server.compression.enabled=true",
     "server.compression.min-response-size=128"
   })
@@ -40,12 +42,14 @@ class ITZipkinUiConfiguration {
   OkHttpClient client = new OkHttpClient.Builder().followRedirects(false).build();
 
   @Test void configJson() throws Exception {
+    // Properties set in @SpringBootTest above are visible in /config.json, exactly as they
+    // would be via ZIPKIN_UI_* environment variables. See issue #3508.
     assertThat(get("/zipkin/config.json").body().string()).isEqualTo("""
       {
-        "environment" : "",
+        "environment" : "test",
         "queryLimit" : 10,
         "defaultLookback" : 900000,
-        "searchEnabled" : true,
+        "searchEnabled" : false,
         "logsUrl" : null,
         "supportUrl" : null,
         "archivePostUrl" : null,

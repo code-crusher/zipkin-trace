@@ -22,8 +22,11 @@ const propTypes = {
 
 export const UiConfig = ({ children }) => {
   const response = configResource.read();
+  // Only default keys missing from the response: falsy values such as
+  // searchEnabled=false or environment="" are intentional configuration.
+  // See https://github.com/openzipkin/zipkin/issues/3508
   Object.keys(defaultConfig).forEach((key) => {
-    if (!response[key]) {
+    if (response[key] === undefined) {
       response[key] = defaultConfig[key];
     }
   });
